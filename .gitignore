@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+
+# Generated data
+*.bin
+*.pkl
+
+# Model checkpoints
+*.pt
+
+# Training outputs
+out_movies/
+out_movies_full/
