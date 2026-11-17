@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 ROOT = Path(__file__).resolve().parent
 MODEL_DIR = "out_movies"
-AVAILABLE_MODELS = ("out_movies", "out_movies_full")
+AVAILABLE_MODELS = ("out_movies", "out_movies_full", "out_twitter", "out_twitter_full")
 DEVICE = "cpu"
 
 app = Flask(__name__, static_folder=None)
@@ -16,7 +16,7 @@ app = Flask(__name__, static_folder=None)
 
 def generate_text(model=MODEL_DIR):
     if model not in AVAILABLE_MODELS:
-        raise ValueError("Choose out_movies or out_movies_full.")
+        raise ValueError("Choose one of: " + ", ".join(AVAILABLE_MODELS) + ".")
     result = subprocess.run(
         [sys.executable, "sample.py", f"--out_dir={model}", f"--device={DEVICE}", "--plain_output=True"],
         cwd=ROOT,

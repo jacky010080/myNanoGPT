@@ -131,6 +131,8 @@ Open **http://127.0.0.1:5000** in your browser. Use the model menu to choose an 
 | ------------ | ----- | ------------------------- |
 | `movie`      | Small | `out_movies/ckpt.pt`      |
 | `movie`      | Full  | `out_movies_full/ckpt.pt` |
+| `twitter`    | Small | `out_twitter/ckpt.pt`     |
+| `twitter`    | Full  | `out_twitter_full/ckpt.pt` |
 
 The page shows generated text without configuration messages, model-loading logs, or sample separators. Model switching takes effect on the next generation request.
 
@@ -143,7 +145,7 @@ Flask runs locally with development reloading enabled. To stop it, press `Ctrl+C
 ```text
 Generate Text
     -> script.js
-    -> GET /generate?model=out_movies or out_movies_full
+    -> GET /generate?model=<checkpoint directory>
     -> Flask generate()
     -> generate_text()
     -> sample.py
@@ -151,7 +153,7 @@ Generate Text
     -> display generated text
 ```
 
-The generation endpoint accepts `out_movies` and `out_movies_full`. Omitting the `model` parameter uses `out_movies` by default. A successful response has this format:
+The generation endpoint accepts `out_movies`, `out_movies_full`, `out_twitter`, and `out_twitter_full`. Keep the matching vocabulary files at `data/movies/meta.pkl` and `data/twitter/meta.pkl`. Omitting the `model` parameter uses `out_movies` by default. A successful response has this format:
 
 ```json
 { "output": "Generated text..." }

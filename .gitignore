@@ -22,3 +22,5 @@ __pycache__/
 # Training outputs
 out_movies/
 out_movies_full/
+out_twitter/
+out_twitter_full/
