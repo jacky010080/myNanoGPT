@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Small models, big ideas. A playful space for stories written by nanoGPT."
+    />
+    <title>MyNanoGPT</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/script.js" defer></script>
+  </head>
+  <body>
+    <div class="studio">
+      <header class="site-header">
+        <a class="wordmark" href="/" aria-label="nanoGPT home"
+          >MyNanoGPT<span aria-hidden="true">✳</span></a
+        >
+        <span class="header-note">TEXT STUDIO</span>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <h1 id="page-title">Let it<br />write.</h1>
+          <p class="intro-note">Your next story, one click away.</p>
+          <svg
+            class="intro-spark"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M50 0 59 29 85 15 71 41 100 50 71 59 85 85 59 71 50 100 41 71 15 85 29 59 0 50 29 41 15 15 41 29Z"
+              fill="currentColor"
+            />
+          </svg>
+        </section>
+
+        <section class="workspace" aria-label="Text generator">
+          <div class="toolbar">
+            <div class="model-field">
+              <span id="modelLabel" class="model-label">CHOOSE YOUR MODEL</span>
+              <div id="modelPicker" class="model-picker">
+                <button
+                  id="modelSelect"
+                  class="model-trigger"
+                  type="button"
+                  value="out_movies"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-controls="modelOptions"
+                  aria-labelledby="modelLabel modelValue modelSize"
+                >
+                  <span id="modelValue" class="model-name">movie</span>
+                  <span id="modelSize" class="model-size"
+                    >Small</span
+                  >
+                  <span class="model-chevron" aria-hidden="true"></span>
+                </button>
+                <div
+                  id="modelOptions"
+                  class="model-options"
+                  role="listbox"
+                  aria-labelledby="modelLabel"
+                  hidden
+                >
+                  <button
+                    class="model-option"
+                    type="button"
+                    role="option"
+                    aria-selected="true"
+                    tabindex="-1"
+                    data-value="out_movies"
+                    data-size="Small"
+                  >
+                    <span class="option-name">movie</span>
+                    <span class="option-size">Small</span>
+                    <span class="option-check" aria-hidden="true">✓</span>
+                  </button>
+                  <button
+                    class="model-option"
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    tabindex="-1"
+                    data-value="out_movies_full"
+                    data-size="Full"
+                  >
+                    <span class="option-name">movie</span>
+                    <span class="option-size">Full</span>
+                    <span class="option-check" aria-hidden="true">✓</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button id="generateButton" class="generate-button" type="button">
+              <span id="buttonLabel">Generate Text</span>
+              <span class="button-arrow" aria-hidden="true">↗</span>
+            </button>
+          </div>
+
+          <div class="result" id="result" data-state="empty">
+            <div class="result-header">
+              <h2>02 / YOUR NEXT STORY</h2>
+              <span id="status" class="status" role="status"
+                >Ready when you are</span
+              >
+            </div>
+            <div id="emptyState" class="empty-state">
+              <span class="empty-mark" aria-hidden="true">✳</span>
+              <p id="emptyTitle">Oh, the things<br />you could write.</p>
+              <span>Choose a model. Give it a go.</span>
+            </div>
+            <pre id="output" aria-live="polite" hidden></pre>
+          </div>
+        </section>
+      </main>
+
+      <footer><span>Powered by nanoGPT.</span></footer>
+    </div>
+  </body>
+</html>

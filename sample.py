@@ -3,7 +3,8 @@ Sample from a trained model
 """
 import os
 import pickle
-from contextlib import nullcontext
+import sys
+from contextlib import nullcontext, redirect_stdout
 import torch
 import tiktoken
 from model import GPTConfig, GPT
@@ -20,7 +21,9 @@ seed = 1337
 device = 'cpu' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
-exec(open('configurator.py').read()) # overrides from command line or config file
+plain_output = False # omit sample separators when called by the web interface
+with redirect_stdout(sys.stderr):
+    exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
 
 torch.manual_seed(seed)
@@ -37,7 +40,8 @@ if init_from == 'resume':
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
     gptconf = GPTConfig(**checkpoint['model_args'])
-    model = GPT(gptconf)
+    with redirect_stdout(sys.stderr):
+        model = GPT(gptconf)
     state_dict = checkpoint['model']
     unwanted_prefix = '_orig_mod.'
     for k,v in list(state_dict.items()):
@@ -46,7 +50,8 @@ if init_from == 'resume':
     model.load_state_dict(state_dict)
 elif init_from.startswith('gpt2'):
     # init from a given GPT-2 model
-    model = GPT.from_pretrained(init_from, dict(dropout=0.0))
+    with redirect_stdout(sys.stderr):
+        model = GPT.from_pretrained(init_from, dict(dropout=0.0))
 
 model.eval()
 model.to(device)
@@ -59,7 +64,7 @@ if init_from == 'resume' and 'config' in checkpoint and 'dataset' in checkpoint[
     meta_path = os.path.join('data', checkpoint['config']['dataset'], 'meta.pkl')
     load_meta = os.path.exists(meta_path)
 if load_meta:
-    print(f"Loading meta from {meta_path}...")
+    print(f"Loading meta from {meta_path}...", file=sys.stderr)
     with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
     # TODO want to make this more general to arbitrary encoder/decoder schemes
@@ -68,7 +73,7 @@ if load_meta:
     decode = lambda l: ''.join([itos[i] for i in l])
 else:
     # ok let's assume gpt-2 encodings by default
-    print("No meta.pkl found, assuming GPT-2 encodings...")
+    print("No meta.pkl found, assuming GPT-2 encodings...", file=sys.stderr)
     enc = tiktoken.get_encoding("gpt2")
     encode = lambda s: enc.encode(s, allowed_special={"<|endoftext|>"})
     decode = lambda l: enc.decode(l)
@@ -86,4 +91,5 @@ with torch.no_grad():
         for k in range(num_samples):
             y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print(decode(y[0].tolist()))
-            print('---------------')
+            if not plain_output:
+                print('---------------')
