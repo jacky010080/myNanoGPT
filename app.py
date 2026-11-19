@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
+import torch
 
 ROOT = Path(__file__).resolve().parent
 MODEL_DIR = "out_movies"
@@ -53,6 +54,26 @@ def generate():
     except (subprocess.SubprocessError, OSError) as error:
         print(getattr(error, "stderr", None) or str(error), file=sys.stderr)
         return jsonify(error="Generation failed. Check the server terminal for details."), 500
+
+
+@app.route("/model-info", methods=["GET"])
+def model_info():
+    model = request.args.get("model", MODEL_DIR)
+    if model not in AVAILABLE_MODELS:
+        return jsonify(error="Choose one of: " + ", ".join(AVAILABLE_MODELS) + "."), 400
+    try:
+        # Memory-map tensor storage: reading architecture metadata does not need
+        # to load the model weights into memory or construct a GPT instance.
+        checkpoint = torch.load(
+            str(ROOT / model / "ckpt.pt"), map_location="cpu", weights_only=True, mmap=True
+        )
+        fields = ("block_size", "n_layer", "n_head", "n_embd")
+        return jsonify(model=model, **{key: checkpoint["model_args"][key] for key in fields})
+    except FileNotFoundError:
+        return jsonify(error="Model checkpoint not found."), 404
+    except Exception:
+        app.logger.exception("Unable to read model architecture")
+        return jsonify(error="Unable to load model details."), 500
 
 
 @app.errorhandler(404)

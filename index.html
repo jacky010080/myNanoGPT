@@ -17,7 +17,6 @@
         <a class="wordmark" href="/" aria-label="nanoGPT home"
           >MyNanoGPT<span aria-hidden="true">✳</span></a
         >
-        <span class="header-note">TEXT STUDIO</span>
       </header>
 
       <main>
@@ -76,7 +75,6 @@
                   >
                     <span class="option-name">movie</span>
                     <span class="option-size">Small</span>
-                    <span class="option-check" aria-hidden="true">✓</span>
                   </button>
                   <button
                     class="model-option"
@@ -89,7 +87,6 @@
                   >
                     <span class="option-name">movie</span>
                     <span class="option-size">Full</span>
-                    <span class="option-check" aria-hidden="true">✓</span>
                   </button>
                   <button
                     class="model-option"
@@ -102,7 +99,6 @@
                   >
                     <span class="option-name">twitter</span>
                     <span class="option-size">Small</span>
-                    <span class="option-check" aria-hidden="true">✓</span>
                   </button>
                   <button
                     class="model-option"
@@ -115,10 +111,28 @@
                   >
                     <span class="option-name">twitter</span>
                     <span class="option-size">Full</span>
-                    <span class="option-check" aria-hidden="true">✓</span>
                   </button>
                 </div>
               </div>
+              <dl id="modelDetails" class="model-details" aria-label="Selected model architecture" aria-live="polite" aria-busy="true">
+                <div>
+                  <dt>Context length</dt>
+                  <dd id="modelContext">—</dd>
+                </div>
+                <div>
+                  <dt>Layers</dt>
+                  <dd id="modelLayers">—</dd>
+                </div>
+                <div>
+                  <dt>Attention heads</dt>
+                  <dd id="modelHeads">—</dd>
+                </div>
+                <div>
+                  <dt>Embedding size</dt>
+                  <dd id="modelEmbedding">—</dd>
+                </div>
+              </dl>
+              <p id="modelDetailsError" class="model-details-error" role="status" hidden></p>
             </div>
             <button id="generateButton" class="generate-button" type="button">
               <span id="buttonLabel">Generate Text</span>
@@ -126,13 +140,10 @@
             </button>
           </div>
 
-          <div class="result" id="result" data-state="empty">
-            <div class="result-header">
-              <h2>02 / YOUR NEXT STORY</h2>
-              <span id="status" class="status" role="status"
-                >Ready when you are</span
-              >
-            </div>
+          <div class="result" id="result" data-state="empty" role="region" aria-label="Generated text">
+            <span id="status" class="status" role="status"
+              >Ready when you are</span
+            >
             <div id="emptyState" class="empty-state">
               <span class="empty-mark" aria-hidden="true">✳</span>
               <p id="emptyTitle">Oh, the things<br />you could write.</p>

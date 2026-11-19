@@ -12,6 +12,39 @@ const modelOptions = document.getElementById('modelOptions');
 const modelValue = document.getElementById('modelValue');
 const modelSize = document.getElementById('modelSize');
 const options = Array.from(modelOptions.querySelectorAll('[role="option"]'));
+const modelDetails = document.getElementById('modelDetails');
+const modelDetailsError = document.getElementById('modelDetailsError');
+const modelContext = document.getElementById('modelContext');
+const modelLayers = document.getElementById('modelLayers');
+const modelHeads = document.getElementById('modelHeads');
+const modelEmbedding = document.getElementById('modelEmbedding');
+let modelInfoRequest = 0;
+
+async function updateModelDetails() {
+  const requestId = ++modelInfoRequest;
+  const model = modelSelect.value;
+  modelDetails.setAttribute('aria-busy', 'true');
+  modelDetailsError.hidden = true;
+  for (const field of [modelContext, modelLayers, modelHeads, modelEmbedding]) {
+    field.textContent = '—';
+  }
+  try {
+    const response = await fetch(`/model-info?model=${encodeURIComponent(model)}`);
+    const data = await response.json();
+    if (requestId !== modelInfoRequest) return;
+    if (!response.ok) throw new Error(data.error || 'Unable to load model details.');
+    modelContext.textContent = `${data.block_size} chars`;
+    modelLayers.textContent = data.n_layer;
+    modelHeads.textContent = data.n_head;
+    modelEmbedding.textContent = data.n_embd;
+  } catch (error) {
+    if (requestId !== modelInfoRequest) return;
+    modelDetailsError.textContent = error.message;
+    modelDetailsError.hidden = false;
+  } finally {
+    if (requestId === modelInfoRequest) modelDetails.setAttribute('aria-busy', 'false');
+  }
+}
 
 function closeModelMenu() {
   modelOptions.hidden = true;
@@ -35,6 +68,7 @@ for (const option of options) {
     modelSelect.value = option.dataset.value;
     modelValue.textContent = option.querySelector('.option-name').textContent;
     modelSize.textContent = option.dataset.size;
+    updateModelDetails();
     for (const item of options) {
       item.setAttribute('aria-selected', String(item === option));
     }
@@ -108,3 +142,5 @@ generateButton.onclick = async function () {
     modelSelect.disabled = false;
   }
 };
+
+updateModelDetails();

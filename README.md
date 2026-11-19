@@ -2,7 +2,7 @@
 
 A character-level text generation project built with Python, PyTorch, and Flask, based on [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy.
 
-This project focuses on training lightweight GPT models using a movie text dataset, generating new text, and exploring how different model architectures and training configurations affect generation quality.
+This project focuses on training lightweight GPT models using movie and Twitter text datasets, generating new text, and exploring how different model architectures and training configurations affect generation quality.
 
 ## Features
 
@@ -33,74 +33,80 @@ This is a script-based project: `uv` manages its dependencies without installing
 
 Model checkpoints and generated dataset files are not tracked in Git. If you already have the checkpoints and their matching `meta.pkl`, you can skip the data preparation and training steps and proceed to text generation or the web interface.
 
-## 2. Prepare the Dataset
+## 2. Prepare the Datasets
 
-The movie text dataset is included at `data/movies/input.txt`. To encode it:
+The source text files are `data/movies/input.txt` and `data/twitter/input.txt`. Prepare the datasets you plan to train on:
 
 ```bash
 python data/movies/prepare.py
+python data/twitter/prepare.py
 ```
 
-The script writes the following files to `data/movies/`:
+Each script writes the following files into its dataset directory:
 
-| File        | Purpose                                             |
-| ----------- | --------------------------------------------------- |
-| `train.bin` | Encoded training data                               |
-| `val.bin`   | Encoded validation data                             |
-| `meta.pkl`  | Character vocabulary and encoding/decoding mappings |
+| File | Purpose |
+| --- | --- |
+| `train.bin` | Encoded training data |
+| `val.bin` | Encoded validation data |
+| `meta.pkl` | Character vocabulary and encoding/decoding mappings |
 
 Keep the vocabulary used during training together with its checkpoints. Regenerating `meta.pkl` from different text can change the character mappings and make it incompatible with an existing model.
 
 ## 3. Train the Models
 
-`config.py` defines the dataset and default training settings. Command-line arguments override individual values.
+Each model has an independent configuration file containing its dataset, architecture, training settings, and output directory:
 
-Use a separate output directory for each model so training one does not overwrite the other's checkpoint.
+| Dataset | Size | Configuration File | Checkpoint Directory |
+| --- | --- | --- | --- |
+| Movies | Small | `config_movies.py` | `out_movies` |
+| Movies | Full | `config_movies_full.py` | `out_movies_full` |
+| Twitter | Small | `config_twitter.py` | `out_twitter` |
+| Twitter | Full | `config_twitter_full.py` | `out_twitter_full` |
 
-### Small Model
-
-```bash
-python train.py config.py \
-  --device=cpu \
-  --compile=False \
-  --dtype=float32 \
-  --eval_iters=20 \
-  --log_interval=1 \
-  --block_size=64 \
-  --batch_size=12 \
-  --n_layer=4 \
-  --n_head=4 \
-  --n_embd=128 \
-  --max_iters=2000 \
-  --lr_decay_iters=2000 \
-  --dropout=0.0 \
-  --out_dir=out_movies
-```
-
-### Full Model
-
-The current architecture in `config.py` defines the Full model. Specify its output directory explicitly:
+### Movie Models
 
 ```bash
-python train.py config.py \
-  --device=cpu \
-  --compile=False \
-  --dtype=float32 \
-  --out_dir=out_movies_full
+# Small
+python train.py config_movies.py
+
+# Full
+python train.py config_movies_full.py
 ```
 
-Training reports training and validation loss. Checkpoints are saved as `ckpt.pt` in the selected output directory when the configured checkpoint conditions are met.
+### Twitter Models
+
+```bash
+# Small
+python train.py config_twitter.py
+
+# Full
+python train.py config_twitter_full.py
+```
+
+All four configurations explicitly use CPU training, `compile=False`, and `dtype='float32'`. Small models use 4 layers, 4 attention heads, 128 embedding dimensions, and a 2,000-iteration training budget. Full models use 6 layers, 6 attention heads, 384 embedding dimensions, and a 5,000-iteration budget. Each configuration saves to its own output directory.
+
+The existing Full models (`out_movies_full` and `out_twitter_full`) were manually stopped at iteration 500 because completing all 5,000 iterations would take several hours on CPU. Their configuration files retain the original 5,000-iteration budget; the existing checkpoints and reported results reflect the runs stopped at iteration 500.
+
+`train.py` provides defaults for settings not specified in the configuration file. Command-line arguments placed after the configuration file can still override individual values for an experiment:
+
+```bash
+python train.py config_movies.py --max_iters=1000 --lr_decay_iters=1000
+```
+
+Training reports training and validation loss. Checkpoints are saved as `ckpt.pt` in the selected output directory when the configured checkpoint conditions are met. Editing a configuration file changes future training runs; existing checkpoints retain their saved weights and metadata.
 
 ## 4. Generate Text from the Command Line
 
-After training, sample from either checkpoint:
+After training, sample from any of the four checkpoints:
 
 ```bash
-# Small model
+# Movie models
 python sample.py --out_dir=out_movies --device=cpu
-
-# Full model
 python sample.py --out_dir=out_movies_full --device=cpu
+
+# Twitter models
+python sample.py --out_dir=out_twitter --device=cpu
+python sample.py --out_dir=out_twitter_full --device=cpu
 ```
 
 To supply an opening prompt and change the generation settings:
@@ -133,6 +139,8 @@ Open **http://127.0.0.1:5000** in your browser. Use the model menu to choose an 
 | `movie`      | Full  | `out_movies_full/ckpt.pt` |
 | `twitter`    | Small | `out_twitter/ckpt.pt`     |
 | `twitter`    | Full  | `out_twitter_full/ckpt.pt` |
+
+Selecting a model displays its context length, layer count, attention head count, and embedding size below the menu. These read-only values are retrieved from the selected checkpoint's `model_args` through `GET /model-info?model=<checkpoint directory>`, so they describe the saved model rather than the current training configuration.
 
 The page shows generated text without configuration messages, model-loading logs, or sample separators. Model switching takes effect on the next generation request.
 
@@ -174,14 +182,22 @@ myNanoGPT/
 ├── model.py                # GPT architecture
 ├── train.py                # Training loop and checkpoint saving
 ├── sample.py               # Checkpoint loading and text generation
-├── config.py               # Movie dataset training configuration
+├── config_movies.py        # Small movie model training settings
+├── config_movies_full.py   # Full movie model training settings
+├── config_twitter.py       # Small Twitter model training settings
+├── config_twitter_full.py  # Full Twitter model training settings
 ├── configurator.py         # Configuration and command-line overrides
 ├── data/
-│   └── movies/
-│       ├── input.txt       # Source text
-│       └── prepare.py      # Dataset preprocessing
+│   ├── movies/
+│   │   ├── input.txt       # Movie source text
+│   │   └── prepare.py      # Movie dataset preprocessing
+│   └── twitter/
+│       ├── input.txt       # Twitter source text
+│       └── prepare.py      # Twitter dataset preprocessing
 ├── out_movies/             # Small model checkpoint (generated)
-├── out_movies_full/        # Full model checkpoint (generated)
+├── out_movies_full/        # Full movie model checkpoint (generated)
+├── out_twitter/            # Small Twitter model checkpoint (generated)
+├── out_twitter_full/       # Full Twitter model checkpoint (generated)
 ├── pyproject.toml          # Project metadata and dependencies
 ├── uv.lock                 # Locked dependency versions
 └── README.md
@@ -204,7 +220,7 @@ Two model architectures have been tested on the same movie text dataset:
 | Dropout              | 0.0           | 0.2               |
 | Checkpoint directory | `out_movies`  | `out_movies_full` |
 
-Previously recorded results for the Full model after 500 training iterations:
+Previously recorded results for the Full movie model at iteration 500, when training was manually stopped:
 
 - Training loss: **1.6093**
 - Validation loss: **1.6087**
